@@ -23,21 +23,44 @@ class WatchListTab extends StatelessWidget {
             style: Theme.of(context).textTheme.bodyLarge,
           ),
           Expanded(
-            child: ListView.separated(
-              separatorBuilder: (context, index) {
-                return const Divider(
-                  height: 1,
-                  color: MyColors.greyColor,
-                );
-              },
-              itemBuilder: (context, index) {
-                return MovieListItem(
-                  movie: provider.model.movies![index],
-                  isFiltered: true,
-                );
-              },
-              itemCount: provider.model.movies!.length,
-            ),
+            child: provider.model.movies!.isEmpty
+                ? Container(
+                    width: double.infinity,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset("assets/images/ic_movie.png"),
+                        SizedBox(
+                          height: 10.h,
+                        ),
+                        Text(
+                          "No movies added!",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodyMedium!
+                              .copyWith(
+                                  color: MyColors.whiteColor.withOpacity(0.6),
+                                  fontSize: 13.sp),
+                        )
+                      ],
+                    ),
+                  )
+                : ListView.separated(
+                    separatorBuilder: (context, index) {
+                      return const Divider(
+                        height: 1,
+                        color: MyColors.greyColor,
+                      );
+                    },
+                    itemBuilder: (context, index) {
+                      return MovieListItem(
+                        movie: provider.model.movies![index],
+                        isFiltered: true,
+                      );
+                    },
+                    itemCount: provider.model.movies!.length,
+                  ),
           )
         ],
       ),
