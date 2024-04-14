@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:movie_app_project/style/my_colors.dart';
 
@@ -14,6 +15,12 @@ class MyTheme {
             fontSize: 10,
             fontWeight: FontWeight.w400,
             color: Colors.white),
+      ),
+      appBarTheme: const AppBarTheme(
+        iconTheme: IconThemeData(
+          color: MyColors.whiteColor,
+          size: 24,
+        )
       ),
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         backgroundColor: MyColors.bottomNavBarBgColor,
