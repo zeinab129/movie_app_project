@@ -1,99 +1,61 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_image_slideshow/flutter_image_slideshow.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:movie_app_project/data/api/api_manager.dart';
 import 'package:movie_app_project/style/my_colors.dart';
 import 'package:movie_app_project/view/widgets/movie_item.dart';
+import 'package:movie_app_project/view/widgets/popular_movie_item.dart';
 import 'package:movie_app_project/view/widgets/release_movie_item.dart';
 
-class MovieHomeTab extends StatelessWidget {
+class MovieHomeTab extends StatefulWidget {
   const MovieHomeTab({super.key});
 
+  @override
+  State<MovieHomeTab> createState() => _MovieHomeTabState();
+}
+
+class _MovieHomeTabState extends State<MovieHomeTab> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       child: Column(
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: 290,
-            child: Stack(
-              children: [
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Image.asset(
-                      "assets/images/test/cover.png",
-                      height: 217,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                    const Icon(
-                      Icons.play_circle_fill_rounded,
-                      color: MyColors.whiteColor,
-                      size: 64,
-                    )
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(start: 12, bottom: 12),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      Stack(
-                        alignment: AlignmentDirectional.topStart,
-                        children: [
-                          ClipRRect(
-                              borderRadius:
-                              const BorderRadius.all(Radius.circular(4)),
-                              child: Image.asset(
-                                "assets/images/test/poster.png",
-                                width: 129,
-                                height: 199,
-                                fit: BoxFit.fill,
-                              )),
-                          Image.asset(
-                            "assets/images/ic_add_bookmark.png",
-                            height: 36,
-                            width: 27,
-                          )
-                        ],
-                      ),
-                      const SizedBox(width: 8,),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              "Dora and the lost city of gold",
-                              style: Theme.of(context).textTheme.bodyMedium,
-                            ),
-                            const SizedBox(
-                              height: 4,
-                            ),
-                            Text(
-                              "2019  PG-13  2h 7m",
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodySmall!
-                                  .copyWith(color: MyColors.secondTextColor),
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                )
-              ],
-            ),
+          FutureBuilder(
+            future: ApiManager.getPopular(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+              if (snapshot.hasError) {
+                return const Center(
+                  child: Text("Something wrong happened!"),
+                );
+              }
+              return ImageSlideshow(
+                  width: double.infinity,
+                  height: 290.h,
+                  initialPage: 0,
+                  autoPlayInterval: 5000,
+                  indicatorColor: Colors.transparent,
+                  indicatorPadding: 0.0,
+                  indicatorBackgroundColor: Colors.transparent,
+                  isLoop: true,
+                  children: snapshot.data!.results!
+                      .map((movie) => PopularMovieItem(
+                            movie: movie,
+                          ))
+                      .toList());
+            },
           ),
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 16),
-            padding: const EdgeInsets.all(12),
+            margin: EdgeInsets.only(top: 24.r),
+            padding: EdgeInsets.all(12.r),
             width: double.infinity,
             color: MyColors.movieItemBgColor,
-            height: 188,
+            height: 188.h,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -101,27 +63,44 @@ class MovieHomeTab extends StatelessWidget {
                   "New Releases ",
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(
-                  height: 8,
+                SizedBox(
+                  height: 8.h,
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    itemBuilder: (context, index) {
-                      return ReleaseMovieItem();
-                    },
-                    itemCount: 10,
-                    scrollDirection: Axis.horizontal,
-                  ),
+                FutureBuilder(
+                  future: ApiManager.getNewReleases(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text("${snapshot.error.toString()}"),
+                      );
+                    }
+                    return Expanded(
+                      child: ListView.builder(
+                        itemBuilder: (context, index) {
+                          return ReleaseMovieItem(
+                            movie: snapshot.data!.results![index],
+                          );
+                        },
+                        itemCount: snapshot.data!.results!.length,
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
           ),
           Container(
-            margin: const EdgeInsets.symmetric(vertical: 16),
-            padding: const EdgeInsets.all(12),
+            margin: EdgeInsets.only(top:30.r, bottom: 16.r),
+            padding: EdgeInsets.all(12.r),
             width: double.infinity,
             color: MyColors.movieItemBgColor,
-            height: 250,
+            height: 250.h,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -129,17 +108,33 @@ class MovieHomeTab extends StatelessWidget {
                   "Recommended",
                   style: Theme.of(context).textTheme.bodyMedium,
                 ),
-                const SizedBox(
-                  height: 8,
+                SizedBox(
+                  height: 8.h,
                 ),
-                Expanded(
-                  child: ListView.builder(
-                    itemBuilder: (context, index) {
-                      return const MovieItem();
-                    },
-                    itemCount: 10,
-                    scrollDirection: Axis.horizontal,
-                  ),
+                FutureBuilder(
+                  future: ApiManager.getRecommended(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(),
+                      );
+                    }
+                    if (snapshot.hasError) {
+                      return const Center(
+                        child: Text("Something Went Wrong!"),
+                      );
+                    }
+                    return Expanded(
+                      child: ListView.builder(
+                        itemBuilder: (context, index) {
+                          return MovieItem(
+                              movie: snapshot.data!.results![index], isDetailsScreen: false,);
+                        },
+                        itemCount: snapshot.data!.results!.length,
+                        scrollDirection: Axis.horizontal,
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -147,6 +142,5 @@ class MovieHomeTab extends StatelessWidget {
         ],
       ),
     );
-
   }
 }

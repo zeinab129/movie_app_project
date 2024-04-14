@@ -73,7 +73,7 @@ class HomeScreen extends StatelessWidget {
 
 List<Widget> screens = [
   const MovieHomeTab(),
-  const SearchTab(),
+  SearchTab(),
   const BrowseTab(),
   const WatchListTab(),
 ];

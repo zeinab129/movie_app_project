@@ -1,86 +1,142 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:movie_app_project/data/api/api_manager.dart';
+import 'package:movie_app_project/data/model/movie_model.dart';
+import 'package:movie_app_project/data/provider/my_provider.dart';
 import 'package:movie_app_project/style/my_colors.dart';
+import 'package:movie_app_project/view/screens/movie_details_sreen.dart';
+import 'package:provider/provider.dart';
 
-class MovieItem extends StatelessWidget {
-  const MovieItem({super.key});
+class MovieItem extends StatefulWidget {
+  MovieDetailsModel movie;
+  bool isDetailsScreen;
+
+  MovieItem({super.key, required this.movie, required this.isDetailsScreen});
 
   @override
+  State<MovieItem> createState() => _MovieItemState();
+}
+
+class _MovieItemState extends State<MovieItem> {
+  @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 8.0,
-      shadowColor: Colors.black,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-      child: Container(
-        width: 97,
-        decoration: BoxDecoration(
-            color: MyColors.movieItemBgColor,
-            borderRadius: BorderRadius.circular(4)),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-                borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(4), topRight: Radius.circular(4)),
-                child: Stack(
-                  alignment: AlignmentDirectional.topStart,
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.all(Radius.circular(4)),
-                      child: Image.asset(
-                        "assets/images/test/movie1.png",
-                        height: 128,
-                        width: 97,
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                    Image.asset("assets/images/ic_add_bookmark.png", height: 36, width: 27,)
-                  ],
-                )
-                // Image.asset("assets/images/movie.png", height: 128, width: 97, fit: BoxFit.fill,),
-                ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    var provider = Provider.of<MyProvider>(context);
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 14.r),
+      width: 97.w,
+      height: 186.h,
+      decoration: BoxDecoration(
+          color: MyColors.movieItemBgColor,
+          borderRadius: BorderRadius.circular(4.r),
+          boxShadow: [BoxShadow(blurRadius: 2.r)]),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ClipRRect(
+              borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(4.r),
+                  topRight: Radius.circular(4.r)),
+              child: Stack(
+                alignment: AlignmentDirectional.topStart,
                 children: [
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.star_rate_rounded,
-                        color: MyColors.primaryColor,
-                        size: 16,
-                      ),
-                      const SizedBox(
-                        height: 8,
-                      ),
-                      Text(
-                        "7.7",
-                        style: Theme.of(context).textTheme.bodySmall,
-                      )
-                    ],
+                  InkWell(
+                    onTap: () {
+                      widget.isDetailsScreen
+                          ? Navigator.pushReplacementNamed(
+                              context, MovieDetailsScreen.routeName,
+                              arguments: widget.movie.id)
+                          : Navigator.pushNamed(
+                              context, MovieDetailsScreen.routeName,
+                              arguments: widget.movie.id);
+                    },
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.all(Radius.circular(4.r)),
+                      child: CachedNetworkImage(
+                          imageUrl:
+                              "${ApiManager.IMAGE_BASE_URL}${widget.movie.posterPath}",
+                          height: 128.h,
+                          width: 97.w,
+                          fit: BoxFit.fill,
+                          placeholder: (context, url) => Center(
+                              child: SizedBox(
+                                  width: 18.0.w,
+                                  height: 18.0.h,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.r,
+                                  ))),
+                          errorWidget: (context, url, error) => Container(
+                                color: Colors.grey,
+                                child: const Icon(
+                                  Icons.image_not_supported_rounded,
+                                ),
+                              )),
+                    ),
                   ),
-                  Text(
-                    "Deadpool 2",
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(
-                    height: 4,
-                  ),
-                  Text(
-                    "2018  R  1h 59m",
-                    style: GoogleFonts.inter(
-                        color: MyColors.secondTextColor,
-                        fontSize: 8,
-                        fontWeight: FontWeight.w400),
-                  ),
+                  InkWell(
+                    onTap: provider.isMovieAdded(widget.movie)
+                        ? null
+                        : () {
+                            provider.addToWatchList(widget.movie);
+                            print("count = ${provider.model.movies!.length}");
+                            setState(() {});
+                          },
+                    child: provider.isMovieAdded(widget.movie)
+                        ? Image.asset(
+                            "assets/images/ic_bookmark.png",
+                            height: 36.h,
+                            width: 27.w,
+                          )
+                        : Image.asset(
+                            "assets/images/ic_add_bookmark.png",
+                            height: 36.h,
+                            width: 27.w,
+                          ),
+                  )
                 ],
-              ),
-            )
-          ],
-        ),
+              )),
+          Padding(
+            padding: EdgeInsets.all(6.0.r),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.star_rate_rounded,
+                      color: MyColors.primaryColor,
+                      size: 16.r,
+                    ),
+                    SizedBox(
+                      height: 8.h,
+                    ),
+                    Text(
+                      widget.movie.voteAverage!.toStringAsFixed(1) ?? "",
+                      style: Theme.of(context).textTheme.bodySmall,
+                    )
+                  ],
+                ),
+                Text(
+                  widget.movie.title ?? "",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                SizedBox(
+                  height: 2.h,
+                ),
+                Text(
+                  widget.movie.releaseDate ?? "",
+                  style: GoogleFonts.inter(
+                      color: MyColors.secondTextColor,
+                      fontSize: 8.sp,
+                      fontWeight: FontWeight.w400),
+                ),
+              ],
+            ),
+          )
+        ],
       ),
     );
   }
